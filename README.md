@@ -37,16 +37,22 @@ CANable comes up as dfu enabled device:
 Run `make flash` to flash the latest compiled firmware to the device. 
 
 Alternatively, manually use dfu-util to download firmware:
+
 `sudo dfu-util -d 0483:df11 -c 1 -i 0 -a 0 -s 0x08000000 -D /path/to/file`
+
 where here the file is `CANable-b*.bin`
 
-Read back flash, will get 32kB
+You may read back the flash, and you should get a 32kB binary file.
+
 `sudo dfu-util -d ,0483:df11 c 1 -i 0 -a 0 -s 0x08000000 -U file_name`
 
 
 dfu-util is available from various distro repositories
+
 Debian: `sudo apt-get install dfu-util`
+
 Arch: `sudo pacman -S dfu-util`
+
 Fedora: `sudo yum install dfu-util`
 
 ## Contributors
