@@ -34,25 +34,27 @@ Install the 'boot' jumper to 'boot' position.
 CANable comes up as dfu enabled device:
 "ID 0483:df11 SGS Thomson Microelectronics STM Device in DFU Mode"
 
-Then dfu-util will download firmware:
-"sudo dfu-util -d 0483:df11 -c 1 -i 0 -a 0 -s 0x08000000 -D /path/to/file"
-where here the file is "CANable-b*.bin"
+Run `make flash` to flash the latest compiled firmware to the device. 
+
+Alternatively, manually use dfu-util to download firmware:
+`sudo dfu-util -d 0483:df11 -c 1 -i 0 -a 0 -s 0x08000000 -D /path/to/file`
+where here the file is `CANable-b*.bin`
 
 Read back flash, will get 32kB
-"sudo dfu-util -d ,0483:df11 c 1 -i 0 -a 0 -s 0x08000000 -U file_name"
+`sudo dfu-util -d ,0483:df11 c 1 -i 0 -a 0 -s 0x08000000 -U file_name`
 
 
-dfu-util is available from (Debian) repositories:
-"sudo apt-get install dfu-util"
-
-Similarily should be in rpm repositories
+dfu-util is available from various distro repositories
+Debian: `sudo apt-get install dfu-util`
+Arch: `sudo pacman -S dfu-util`
+Fedora: `sudo yum install dfu-util`
 
 ## Contributors
 
 - [Bill Danford](http://electronics-software.com) - Add "b\r" command/response, correct for RTR messages,
 -                                                   add user input validation to prevent malformed messages,
 -                                                   add check when offline to dump user CAN messages
-- [Ethan Zonca](https://github.com/normaldotcom) - Makefile fixes and code size optimization
+- [Ethan Zonca](https://github.com/normaldotcom) - Makefile fixes and code size optimization; transition to interrupt-based CAN, etc
 - [onejope](https://github.com/onejope) - Fixes to extended ID handling
 - Phil Wise - Added dfu-util compatibility to Makefile
 
