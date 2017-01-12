@@ -14,7 +14,7 @@ BUILD_NUMBER ?= 0
 SOURCES = main.c system.c usbd_conf.c usbd_cdc_if.c usb_device.c usbd_desc.c interrupts.c system_stm32f0xx.c can.c slcan.c led.c
 
 # TARGET: name of the user application
-TARGET = CANtact-b$(BUILD_NUMBER)
+TARGET = CANable-b$(BUILD_NUMBER)
 
 # BUILD_DIR: directory to place output files in
 BUILD_DIR = build
@@ -35,9 +35,10 @@ USB_INCLUDES += -IMiddlewares/ST/STM32_USB_Device_Library/Class/CDC/Inc
 # USER_CFLAGS: user C flags (enable warnings, enable debug info)
 USER_CFLAGS = -Wall -g -ffunction-sections -fdata-sections -Os
 
-ifeq ($(INTERNAL_OSCILLATOR), 1)
+# !! need this cflag !!
+###ifeq ($(INTERNAL_OSCILLATOR), 1)
     USER_CFLAGS += -DINTERNAL_OSCILLATOR
-endif
+###endif
 
 # USER_LDFLAGS:  user LD flags
 USER_LDFLAGS = -fno-exceptions -ffunction-sections -fdata-sections -Wl,--gc-sections
@@ -53,10 +54,15 @@ TARGET_DEVICE = STM32F042x6
 # binaries
 #######################################
 CC = arm-none-eabi-gcc
+#CC = /usr/gcc-arm-none-eabi-4_9/bin/arm-none-eabi-gcc
 AR = arm-none-eabi-ar
+#AR = /usr/gcc-arm-none-eabi-4_9/bin/arm-none-eabi-ar
 RANLIB = arm-none-eabi-ranlib
+#RANLIB = /usr/gcc-arm-none-eabi-4_9/bin/arm-none-eabi-ranlib
 SIZE = arm-none-eabi-size
+#SIZE = /usr/gcc-arm-none-eabi-4_9/bin/arm-none-eabi-size
 OBJCOPY = arm-none-eabi-objcopy
+#OBJCOPY = /usr/gcc-arm-none-eabi-4_9/bin/arm-none-eabi-objcopy
 MKDIR = mkdir -p
 #######################################
 

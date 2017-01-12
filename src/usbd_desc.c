@@ -65,14 +65,15 @@
     #define CANTACT_SW_VER		"b" STRINGIZE(CANTACT_BUILD_NUMBER)
 #endif
 
+/* seems gcc-arm-none-eabi uses (uint8_t *) strings, so typecast as such */
 #define USBD_VID			0xad50
 #define USBD_LANGID_STRING		1033
-#define USBD_MANUFACTURER_STRING	"CANtact"
+#define USBD_MANUFACTURER_STRING	(uint8_t *)"CANable"
 #define USBD_PID_FS			0x60c4
-#define USBD_PRODUCT_STRING_FS		"CANtact" " " CANTACT_SW_VER
-#define USBD_SERIALNUMBER_STRING_FS     "00000000001A"
-#define USBD_CONFIGURATION_STRING_FS    "CDC Config"
-#define USBD_INTERFACE_STRING_FS	"CDC Interface"
+#define USBD_PRODUCT_STRING_FS		(uint8_t *)"CANable" " " CANTACT_SW_VER
+#define USBD_SERIALNUMBER_STRING_FS     (uint8_t *)"00000000001A"
+#define USBD_CONFIGURATION_STRING_FS    (uint8_t *)"CDC Config"
+#define USBD_INTERFACE_STRING_FS	(uint8_t *)"CDC Interface"
 
 /**
   * @}

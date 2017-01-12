@@ -1,8 +1,11 @@
-# CANtact Firmware
+# CANable Firmware
 
 [![Build Status](https://travis-ci.org/linklayer/cantact-fw.svg?branch=master)](https://travis-ci.org/linklayer/cantact-fw)
 
-This repository contains sources for CANtact firmware.
+also found at
+https://github.com/linklayer/cantact-fw
+
+This repository contains sources for CANable firmware.
 
 ## Building
 
@@ -11,7 +14,9 @@ is packaged for Windows, OS X, and Linux on
 [Launchpad](https://launchpad.net/gcc-arm-embedded/+download). Download for your
 system and add the `bin` folder to your PATH.
 
-With that done, you should be able to compile using `make`. If you are compiling for a device that has no external crystal, compile with `make INTERNAL_OSCILLATOR=1`.
+With that done, you should be able to compile using `make`.
+If you are compiling for a device that has no external crystal,
+compile with `make INTERNAL_OSCILLATOR=1`.
 
 ## Flashing & Debugging
 
@@ -23,8 +28,30 @@ the stm32f0x.cfg file: `openocd -f fw/stm32f0x.cfg`.
 
 With OpenOCD running, arm-none-eabi-gdb can be used to load code and debug.
 
+## Flashing with dfu-util
+
+Install the 'boot' jumper to 'boot' position.
+CANable comes up as dfu enabled device:
+"ID 0483:df11 SGS Thomson Microelectronics STM Device in DFU Mode"
+
+Then dfu-util will download firmware:
+"sudo dfu-util -d 0483:df11 -c 1 -i 0 -a 0 -s 0x08000000 -D /path/to/file"
+where here the file is "CANable-b*.bin"
+
+Read back flash, will get 32kB
+"sudo dfu-util -d ,0483:df11 c 1 -i 0 -a 0 -s 0x08000000 -U file_name"
+
+
+dfu-util is available from (Debian) repositories:
+"sudo apt-get install dfu-util"
+
+Similarily should be in rpm repositories
+
 ## Contributors
 
+- [Bill Danford](http://electronics-software.com) - Add "b\r" command/response, correct for RTR messages,
+-                                                   add user input validation to prevent malformed messages,
+-                                                   add check when offline to dump user CAN messages
 - [Ethan Zonca](https://github.com/normaldotcom) - Makefile fixes and code size optimization
 - [onejope](https://github.com/onejope) - Fixes to extended ID handling
 - Phil Wise - Added dfu-util compatibility to Makefile

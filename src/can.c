@@ -175,7 +175,7 @@ uint32_t can_tx(CanTxMsgTypeDef *tx_msg)
     can_handle.pTxMsg = tx_msg;
     status = HAL_CAN_Transmit_IT(&can_handle);
 
-	//led_blue_on();
+	 //led_blue_on();
     return status;
 }
 
@@ -203,6 +203,7 @@ void can_process(void)
         // If result okay, we're done. Otherwise retry on the next time around.
         if(res == HAL_OK)
         {
+            led_blue_on();
             process_tx = 0;
         }
 
@@ -231,15 +232,19 @@ void can_process(void)
 
 void can_preptx(CanTxMsgTypeDef *msg)
 {
-    localmsg = *msg;
-    process_tx = 1;
+    // only if online, else dump (purge) message
+    if (bus_state == ON_BUS)
+    {
+        localmsg = *msg;
+        process_tx = 1;
+    }
 }
 
 // CAN rxcomplete callback TODO: Move to interrupts?
 void HAL_CAN_RxCpltCallback(CAN_HandleTypeDef* hcan)
 {
 	led_blue_on();
-    process_recv = 1;
+	process_recv = 1;
 	uint32_t res = HAL_CAN_Receive_IT(hcan, CAN_FIFO0);
 
     if(res != HAL_OK)
@@ -275,3 +280,8 @@ CAN_HandleTypeDef* can_gethandle(void)
 {
 	return &can_handle;
 }
+
+uint32_t can_status() {
+	return HAL_CAN_GetError(&can_handle);
+}
+

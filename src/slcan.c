@@ -4,6 +4,7 @@
 #include "stm32f0xx_hal.h"
 #include "can.h"
 #include "slcan.h"
+#include "usbd_cdc_if.h"
 
 int8_t slcan_parse_frame(uint8_t *buf, CanRxMsgTypeDef *frame)
 {
@@ -20,7 +21,8 @@ int8_t slcan_parse_frame(uint8_t *buf, CanRxMsgTypeDef *frame)
     if (frame->RTR == CAN_RTR_DATA)
     {
         buf[i] = 't';
-    } else if (frame->RTR == CAN_RTR_REMOTE) {
+    } else if (frame->RTR == CAN_RTR_REMOTE)
+    {
         buf[i] = 'r';
     }
 
@@ -39,7 +41,7 @@ int8_t slcan_parse_frame(uint8_t *buf, CanRxMsgTypeDef *frame)
     i++;
 
     // add identifier to buffer
-    for(j=id_len; j > 0; j--)
+    for (j = id_len; j > 0; j--)
     {
         // add nybble to buffer
         buf[j] = (tmp & 0xF);
@@ -50,11 +52,14 @@ int8_t slcan_parse_frame(uint8_t *buf, CanRxMsgTypeDef *frame)
     // add DLC to buffer
     buf[i++] = frame->DLC;
 
-    // add data bytes
-    for (j = 0; j < frame->DLC; j++)
+    if (frame->RTR == CAN_RTR_DATA)
     {
-        buf[i++] = (frame->Data[j] >> 4);
-        buf[i++] = (frame->Data[j] & 0x0F);
+        // only DATA frames have data, REMOTE have NO data, add data bytes
+        for (j = 0; j < frame->DLC; j++)
+        {
+            buf[i++] = (frame->Data[j] >> 4);
+            buf[i++] = (frame->Data[j] & 0x0F);
+        }
     }
 
     // convert to ASCII (2nd character to end)
@@ -84,14 +89,16 @@ int8_t slcan_parse_str(uint8_t *buf, uint8_t len)
     for (i = 1; i < len; i++)
     {
         // lowercase letters
-        if(buf[i] >= 'a')
+        if ((buf[i] >= 'a') && (buf[i] <= 'f'))
             buf[i] = buf[i] - 'a' + 10;
         // uppercase letters
-        else if(buf[i] >= 'A')
+        else if ((buf[i] >= 'A') && (buf[i] <= 'F'))
             buf[i] = buf[i] - 'A' + 10;
         // numbers
-        else
+        else if ((buf[i] >= '0') && (buf[i] <= '9'))
             buf[i] = buf[i] - '0';
+        else
+            return -1;
     }
 
     if (buf[0] == 'O')
@@ -107,6 +114,9 @@ int8_t slcan_parse_str(uint8_t *buf, uint8_t len)
 
     } else if (buf[0] == 'S') {
         // set bitrate command
+        if (len < 2)
+            // input sanity check, missing value char
+            return -1;
         switch(buf[1])
         {
             case 0:
@@ -142,6 +152,16 @@ int8_t slcan_parse_str(uint8_t *buf, uint8_t len)
         }
         return 0;
 
+    } else if (buf[0] == 'b') {
+        // get status, lowest nibble of CAN_ESR,
+        // driver saves this to hcan->ErrorCode
+        // HAL_CAN_ERROR_EWG | HAL_CAN_ERROR_EPV | HAL_CAN_ERROR_BOF
+        uint8_t resp[4];
+        resp[0] = 'b';
+        resp[1] = 0x30 | (uint8_t) (can_status() & (HAL_CAN_ERROR_EWG | HAL_CAN_ERROR_EPV | HAL_CAN_ERROR_BOF));
+        resp[2] = '\r';
+        return CDC_Transmit_FS(resp, 3);
+
     } else if (buf[0] == 'm' || buf[0] == 'M') {
         // set mode command
         if (buf[1] == 1) 
@@ -175,6 +195,9 @@ int8_t slcan_parse_str(uint8_t *buf, uint8_t len)
         // error
         return -1;
     }
+    if (len < (frame.IDE + 1))
+        // input sanity check, too short for ID type
+        return -1;
 
     frame.StdId = 0;
     frame.ExtId = 0;
@@ -194,17 +217,25 @@ int8_t slcan_parse_str(uint8_t *buf, uint8_t len)
             frame.StdId += buf[i++];
         }
     }
-
+    if (i >= len)
+        // input sanity check, cannot get next, would be DLC
+        return -1;
 
     frame.DLC = buf[i++];
     if (frame.DLC < 0 || frame.DLC > 8) {
         return -1;
     }
 
-    uint8_t j;
-    for (j = 0; j < frame.DLC; j++) {
-        frame.Data[j] = (buf[i] << 4) + buf[i+1];
-        i += 2;
+    if (buf[0] == 't' || buf[0] == 'T') {
+        // RTR frames have NO data, only a request byte
+        if (len < (frame.IDE + (frame.DLC * 2) + 1))
+            // input sanity check, not enough for specified DLC
+            return -1;
+        uint8_t j;
+        for (j = 0; j < frame.DLC; j++) {
+            frame.Data[j] = (buf[i] << 4) + buf[i+1];
+	 	      i += 2;
+        }
     }
 
     // send the message
