@@ -46,7 +46,9 @@ int main(void)
             // Transmit message via USB-CDC 
             if(msg_len)
             {
+                __disable_irq();
                 CDC_Transmit_FS(msg_buf, msg_len);
+                __enable_irq();
             }
         }
 
